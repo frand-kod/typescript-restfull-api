@@ -1,5 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
-import type { CreateUserRequest, LoginUserRequest } from "../model/user-model";
+import type {
+  CreateUserRequest,
+  LoginUserRequest,
+  UpdateUserRequest,
+} from "../model/user-model";
 import { UserService } from "../services/user-service";
 import type { UserRequest } from "../type/user-request";
 
@@ -34,6 +38,31 @@ export class UserController {
       const response = await UserService.get(req.user!);
       res.status(200).json({
         data: response,
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+  static async update(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const request: UpdateUserRequest = req.body as UpdateUserRequest;
+      const response = await UserService.update(req.user!, request);
+      res.status(200).json({
+        data: response,
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async logout(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      await UserService.logout(req.user!);
+      res.status(200).json({
+        data: "OK !!",
       });
     } catch (e) {
       next(e);

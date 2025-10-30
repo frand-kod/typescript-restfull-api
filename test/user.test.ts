@@ -24,7 +24,7 @@ describe("user Registration ", () => {
       name: "",
     });
     logger.error(response.body);
-    expect(response.status).toBe(400);
+    expect(response.status).toEqual(400);
     expect(response.body.error).toBeDefined();
   });
 
@@ -35,7 +35,7 @@ describe("user Registration ", () => {
       name: "test",
     });
     logger.info(response.body);
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
     expect(response.body.data.username).toBe("test");
     expect(response.body.data.name).toBe("test");
   });
@@ -55,7 +55,7 @@ describe("User Login", function () {
       password: "test",
     });
     logger.info(response.body);
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
     expect(response.body.data.username).toBe("test");
     expect(response.body.data.name).toBe("test");
     expect(response.body.data.token).toBeDefined();
@@ -68,7 +68,7 @@ describe("User Login", function () {
       password: "",
     });
     logger.info(response.body);
-    expect(response.status).toBe(400);
+    expect(response.status).toEqual(400);
     expect(response.body.error).toBeDefined();
   });
 
@@ -78,7 +78,7 @@ describe("User Login", function () {
       password: "salah",
     });
     logger.info(response.body);
-    expect(response.status).toBe(401);
+    expect(response.status).toEqual(401);
     expect(response.body.error).toBeDefined();
   });
 });
@@ -97,7 +97,7 @@ describe("User After Login", function () {
       .set("X-API-TOKEN", "test");
 
     logger.info(response.body);
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
     expect(response.body.data.username).toBe("test");
     expect(response.body.data.name).toBe("test");
   });
@@ -108,8 +108,120 @@ describe("User After Login", function () {
       .set("X-API-TOKEN", "salah");
 
     logger.info(response.body);
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(401);
+    expect(response.body.error).toBeDefined();
+  });
+});
+
+describe("User While patch", function () {
+  beforeEach(async () => {
+    await UserTest.create();
+  });
+
+  afterEach(async () => {
+    await UserTest.delete();
+  });
+  test("should be able to update patch", async function () {
+    const response = await supertest(web)
+      .patch("/api/users/current")
+      .set("X-API-TOKEN", "test")
+      .send({
+        username: "test",
+        password: "test",
+      });
+
+    console.log("hasil body : " + response.body.data);
+    expect(response.status).toEqual(200);
     expect(response.body.data.username).toBe("test");
     expect(response.body.data.name).toBe("test");
+  });
+
+  test("should rejected to update patch if request is invalid", async function () {
+    const response = await supertest(web)
+      .patch("/api/users/current")
+      .set("X-API-TOKEN", "test")
+      .send({
+        username: "",
+        password: "",
+      });
+
+    console.log("hasil body : " + response.body.data);
+    expect(response.status).toEqual(400);
+    expect(response.body.error).toBeDefined();
+  });
+
+  test("should rejected to update patch if token is invalid", async function () {
+    const response = await supertest(web)
+      .patch("/api/users/current")
+      .set("X-API-TOKEN", "salah")
+      .send({
+        username: "test",
+        password: "test",
+      });
+
+    console.log("hasil body : " + response.body.data);
+    expect(response.status).toEqual(401);
+    expect(response.body.error).toBeDefined();
+  });
+
+  test("should be able to update patch user name", async function () {
+    const response = await supertest(web)
+      .patch("/api/users/current")
+      .set("X-API-TOKEN", "test")
+      .send({
+        name: "benar",
+      });
+
+    console.log("hasil body : " + response.body.data);
+    expect(response.status).toEqual(200);
+    expect(response.body.data.name).toBe("benar");
+  });
+
+  test("should be able to update patch password", async function () {
+    const response = await supertest(web)
+      .patch("/api/users/current")
+      .set("X-API-TOKEN", "test")
+      .send({
+        password: "passwordbaru",
+      });
+
+    console.log("hasil body : " + response.body.data);
+    expect(response.status).toEqual(200);
+
+    // get user dari data mockup untuk di bandingkan
+    const user = await UserTest.get();
+    expect(await Bun.password.verify("passwordbaru", user.password)).toBeTrue;
+  });
+});
+
+describe("User While patch", function () {
+  beforeEach(async () => {
+    await UserTest.create();
+  });
+
+  afterEach(async () => {
+    await UserTest.delete();
+  });
+
+  test("it should be able to logout", async function () {
+    const response = await supertest(web)
+      .delete("/api/users/current")
+      .set("X-API-TOKEN", "test");
+
+    logger.info(response.body);
+    expect(response.status).toEqual(200);
+    expect(response.body.data).toContain("OK");
+    // cek apakah token di database sudah tidak ada
+    const user = await UserTest.get();
+    expect(user.token).toBeNull();
+  });
+  test("it should be reject to logout if token is wrong", async function () {
+    const response = await supertest(web)
+      .delete("/api/users/current")
+      .set("X-API-TOKEN", "salah");
+
+    logger.info(response.body);
+    expect(response.status).toEqual(401);
+    expect(response.body.error).toBeDefined();
   });
 });

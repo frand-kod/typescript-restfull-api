@@ -10,21 +10,13 @@ export const authMiddleware = async (
   const token = req.get("X-API-TOKEN");
 
   if (token) {
-    const user = await prismaClient.user.findFirst({
-      where: {
-        token: token,
-      },
-    });
+    const user = await prismaClient.user.findFirst({ where: { token } });
+
     if (user) {
-      (req.user = user), next();
-      return;
+      req.user = user;
+      return next();
     }
   }
-  // jika token tidak terdeteksi
-  res
-    .status(401)
-    .json({
-      error: "Unauthorized",
-    })
-    .end();
+
+  return res.status(401).json({ error: "Unauthorized" }).end();
 };

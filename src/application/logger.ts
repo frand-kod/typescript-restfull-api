@@ -2,7 +2,7 @@ import winston from "winston";
 const { combine, timestamp, printf, colorize } = winston.format;
 
 export const logger = winston.createLogger({
-  level: "error",
+  level: "debug",
   format: combine(
     colorize(),
     timestamp(),

@@ -5,6 +5,7 @@ import {
   toUserResponse,
   type CreateUserRequest,
   type LoginUserRequest,
+  type UpdateUserRequest,
   type UserResponse,
 } from "../model/user-model";
 import { UserValidation } from "../validation/user-validation";
@@ -75,5 +76,42 @@ export class UserService {
 
   static async get(user: User): Promise<UserResponse> {
     return toUserResponse(user);
+  }
+
+  static async update(
+    user: User,
+    req: UpdateUserRequest
+  ): Promise<UserResponse> {
+    // validasi
+    const updateRequest = Validation.validate(UserValidation.UPDATE, req);
+    // cek jika yg username ada
+    if (updateRequest.name) {
+      user.name = updateRequest.name;
+    }
+    // cek jika yang ada password
+    if (updateRequest.password) {
+      user.password = await Bun.password.hash(updateRequest.password);
+    }
+
+    const result = await prismaClient.user.update({
+      where: {
+        username: user.username,
+      },
+      data: user,
+    });
+    return toUserResponse(result);
+  }
+
+  static async logout(user: User): Promise<UserResponse> {
+    const result = await prismaClient.user.update({
+      where: {
+        username: user.username,
+      },
+      data: {
+        token: null,
+      },
+    });
+
+    return toUserResponse(result);
   }
 }
