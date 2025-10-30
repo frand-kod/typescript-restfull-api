@@ -1,5 +1,4 @@
 import { prismaClient } from "../src/application/database";
-import bcrypt from "bcrypt";
 
 export class UserTest {
   static async delete() {
